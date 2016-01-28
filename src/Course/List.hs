@@ -75,8 +75,8 @@ headOr ::
   a
   -> List a
   -> a
-headOr =
-  error "todo: Course.List#headOr"
+headOr a Nil      = a
+headOr _ (h :. _) = h
 
 -- | The product of the elements of a list.
 --
@@ -88,8 +88,7 @@ headOr =
 product ::
   List Int
   -> Int
-product =
-  error "todo: Course.List#product"
+product = foldRight (\x y -> x * y) 1
 
 -- | Sum the elements of the list.
 --
@@ -103,8 +102,7 @@ product =
 sum ::
   List Int
   -> Int
-sum =
-  error "todo: Course.List#sum"
+sum = foldRight (\x y -> x + y) 0
 
 -- | Return the length of the list.
 --
@@ -115,8 +113,7 @@ sum =
 length ::
   List a
   -> Int
-length =
-  error "todo: Course.List#length"
+length = foldRight (\_ x -> x + 1) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -130,8 +127,7 @@ map ::
   (a -> b)
   -> List a
   -> List b
-map =
-  error "todo: Course.List#map"
+map f = foldRight (\x y -> f x :. y) Nil
 
 -- | Return elements satisfying the given predicate.
 --
@@ -147,8 +143,7 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter =
-  error "todo: Course.List#filter"
+filter f = foldRight (\x y -> if f x then x :. y else y) Nil
 
 -- | Append two lists to a new list.
 --
@@ -166,8 +161,7 @@ filter =
   List a
   -> List a
   -> List a
-(++) =
-  error "todo: Course.List#(++)"
+(++) = flip $ foldRight (\x y -> x :. y)
 
 infixr 5 ++
 
@@ -184,8 +178,7 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten =
-  error "todo: Course.List#flatten"
+flatten = foldRight (\x y -> x ++ y) Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -201,8 +194,7 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap f = foldRight (\x y -> f x ++ y) Nil 
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -211,8 +203,7 @@ flatMap =
 flattenAgain ::
   List (List a)
   -> List a
-flattenAgain =
-  error "todo: Course.List#flattenAgain"
+flattenAgain = flatMap id
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -236,11 +227,17 @@ flattenAgain =
 --
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
+
+emptyOpt :: Optional a -> Bool
+emptyOpt Empty = True
+emptyOpt _     = False
+
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional =
-  error "todo: Course.List#seqOptional"
+seqOptional xs = foldRight (twiceOptional (\x y -> x :. y)) (Full Nil) xs
+--  if isEmpty $ filter emptyOpt xs then Full (map (\(Full x) -> x) xs)
+--  else Empty
 
 -- | Find the first element in the list matching the predicate.
 --
