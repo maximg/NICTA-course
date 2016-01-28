@@ -228,16 +228,10 @@ flattenAgain = flatMap id
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
 
-emptyOpt :: Optional a -> Bool
-emptyOpt Empty = True
-emptyOpt _     = False
-
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
 seqOptional xs = foldRight (twiceOptional (\x y -> x :. y)) (Full Nil) xs
---  if isEmpty $ filter emptyOpt xs then Full (map (\(Full x) -> x) xs)
---  else Empty
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -255,12 +249,13 @@ seqOptional xs = foldRight (twiceOptional (\x y -> x :. y)) (Full Nil) xs
 --
 -- >>> find (const True) infinity
 -- Full 0
+
+-- MGV: can be better, `map` looks unnecessary
 find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find p xs = headOr Empty $ map (\x -> Full x) $ filter p xs
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -278,8 +273,11 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 = let 
+  lengthGT _ Nil = False
+  lengthGT 0 _ = True
+  lengthGT n (_ :. xs) = lengthGT (n - 1) xs
+  in lengthGT 4
 
 -- | Reverse a list.
 --
@@ -295,8 +293,8 @@ lengthGT4 =
 reverse ::
   List a
   -> List a
-reverse =
-  error "todo: Course.List#reverse"
+reverse = foldLeft (\xs x -> x :. xs) Nil
+
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -306,12 +304,12 @@ reverse =
 --
 -- >>> let (x:.y:.z:.w:._) = produce (*2) 1 in [x,y,z,w]
 -- [1,2,4,8]
+
 produce ::
   (a -> a)
   -> a
   -> List a
-produce =
-  error "todo: Course.List#produce"
+produce f x = x :. produce f (f x)
 
 -- | Do anything other than reverse a list.
 -- Is it even possible?
