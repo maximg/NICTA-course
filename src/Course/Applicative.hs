@@ -263,8 +263,7 @@ lift4 f' a b c d = (pure f') <*> a <*> b <*> c <*> d
   f a
   -> f b
   -> f b
-(*>) =
-  error "todo: Course.Applicative#(*>)"
+(*>) x y = (\_ -> id) <$> x <*> y
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -289,8 +288,7 @@ lift4 f' a b c d = (pure f') <*> a <*> b <*> c <*> d
   f b
   -> f a
   -> f b
-(<*) =
-  error "todo: Course.Applicative#(<*)"
+(<*) x y = (\_ -> id) <$> y <*> x
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -312,8 +310,8 @@ sequence ::
   Applicative f =>
   List (f a)
   -> f (List a)
-sequence =
-  error "todo: Course.Applicative#sequence"
+sequence Nil       = pure Nil
+sequence (x :. xs) = lift2 (:.) x $ sequence xs
 
 -- | Replicate an effect a given number of times.
 --
@@ -336,8 +334,10 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+-- replicateA n x = (replicate n) <$> x 
+replicateA 0 _ = pure Nil
+replicateA n x = lift2 (:.) x $ replicateA (n-1) x
+
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -364,8 +364,12 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering _ Nil       = pure Nil 
+filtering p (x :. xs) =
+  let
+    id2 _ y = y -- is there a std function for this?
+    consIf p' = if p' then (:.) else id2
+  in lift3 consIf (p x) (pure x) $ filtering p xs
 
 -----------------------
 -- SUPPORT LIBRARIES --
