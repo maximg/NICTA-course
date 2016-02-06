@@ -334,7 +334,7 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
--- replicateA n x = (replicate n) <$> x 
+-- replicateA n x = (replicate n) <$> x -- does not work for the last case
 replicateA 0 _ = pure Nil
 replicateA n x = lift2 (:.) x $ replicateA (n-1) x
 

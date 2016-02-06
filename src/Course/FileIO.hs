@@ -62,7 +62,10 @@ the contents of c
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+  let
+    run1st (x :. _) = run x
+    run1st Nil = error "Missing argument"
+  in run1st =<< getArgs
 
 type FilePath =
   Chars
@@ -71,31 +74,36 @@ type FilePath =
 run ::
   Chars
   -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run p =
+  getFileList p >>= getFiles >>= printFiles
+
+getFileList ::
+  FilePath -> IO (List FilePath)
+getFileList p =
+  (\(_,c) -> lines c) <$> getFile p
 
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo: Course.FileIO#getFiles"
+getFiles xs =
+  sequence $ map (\p -> getFile p) xs
 
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+getFile p =
+  readFile p >>= (\xs -> pure (p,xs))
 
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles =
-  error "todo: Course.FileIO#printFiles"
+printFiles Nil = pure ()
+printFiles ((p,c) :. xs) = seq (printFile p c) (printFiles xs)
 
 printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
+printFile p c =
+  putStrLn ("============= " ++ p ++ "\n" ++ c)
 
