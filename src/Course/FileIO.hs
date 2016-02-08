@@ -10,6 +10,7 @@ import Course.Applicative
 import Course.Monad
 import Course.Functor
 import Course.List
+import Debug.Trace
 
 {-
 
@@ -62,10 +63,13 @@ the contents of c
 main ::
   IO ()
 main =
-  let
-    run1st (x :. _) = run x
-    run1st Nil = error "Missing argument"
-  in run1st =<< getArgs
+  -- if length <$> getArgs == 0 then
+  --  error "Missing argument"
+  -- else
+    let fileName = take 1 <$> getArgs
+        fn' = fileName >>= (\x -> trace ("filename") (pure x))
+        doRun = map run <$> fn'
+    in seq doRun $ pure ()
 
 type FilePath =
   Chars
@@ -75,35 +79,31 @@ run ::
   Chars
   -> IO ()
 run p =
-  getFileList p >>= getFiles >>= printFiles
-
-getFileList ::
-  FilePath -> IO (List FilePath)
-getFileList p =
-  (\(_,c) -> lines c) <$> getFile p
+  let fileList = (lines . snd) <$> getFile p
+  in fileList >>= getFiles >>= printFiles
 
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles xs =
-  sequence $ map (\p -> getFile p) xs
+getFiles =
+  sequence . map getFile
 
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
 getFile p =
-  readFile p >>= (\xs -> pure (p,xs))
+  lift2 (,) (pure p) (readFile p)
 
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles Nil = pure ()
-printFiles ((p,c) :. xs) = seq (printFile p c) (printFiles xs)
+printFiles xs =
+  seq (map (\(p,c) -> printFile p c) xs) $ pure ()
 
 printFile ::
   FilePath
   -> Chars
   -> IO ()
 printFile p c =
-  putStrLn ("============= " ++ p ++ "\n" ++ c)
+  putStrLn ("============ " ++ p ++ "\n" ++ c)
 
