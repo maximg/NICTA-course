@@ -255,7 +255,7 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find p xs = headOr Empty $ map (\x -> Full x) $ filter p xs
+find p xs = headOr Empty $ map Full $ filter p xs
 
 -- | Determine if the length of the given list is greater than 4.
 --
