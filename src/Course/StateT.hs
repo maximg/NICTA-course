@@ -39,8 +39,11 @@ instance Functor f => Functor (StateT s f) where
     (a -> b)
     -> StateT s f a
     -> StateT s f b
-  (<$>) =
-    error "todo: Course.StateT (<$>)#instance (StateT s f)"
+  (<$>) f x =
+    StateT { runStateT = (\s -> 
+      let f' (x',s') = (f x',s')
+      in f' <$> runStateT x s
+     ) }
 
 -- | Implement the `Applicative` instance for @StateT s f@ given a @Monad f@.
 --
@@ -63,14 +66,21 @@ instance Monad f => Applicative (StateT s f) where
   pure ::
     a
     -> StateT s f a
-  pure =
-    error "todo: Course.StateT pure#instance (StateT s f)"
+  pure x =
+    StateT { runStateT = (\s -> pure (x,s) ) }
   (<*>) ::
    StateT s f (a -> b)
     -> StateT s f a
     -> StateT s f b
-  (<*>) =
-    error "todo: Course.StateT (<*>)#instance (StateT s f)"
+  (<*>) g x =
+    StateT { runStateT = (\s -> 
+      let
+        g' = runStateT g s
+        x' = runStateT x =<< (snd <$> g')
+        g'' = fst <$> g'
+        applyFst f' (y,z) = (f' y, z)
+      in applyFst <$> g'' <*> x'
+     ) }
 
 -- | Implement the `Monad` instance for @StateT s f@ given a @Monad f@.
 -- Make sure the state value is passed through in `bind`.
@@ -85,8 +95,11 @@ instance Monad f => Monad (StateT s f) where
     (a -> StateT s f b)
     -> StateT s f a
     -> StateT s f b
-  (=<<) =
-    error "todo: Course.StateT (=<<)#instance (StateT s f)"
+  (=<<) g x =
+    StateT { runStateT = (\s -> 
+      let x' = runStateT x s
+      in runStateT =<< (g =<< (fst <$> x')) =<< (snd <$> x') 
+    ) }
 
 -- | A `State'` is `StateT` specialised to the `Id` functor.
 type State' s a =
