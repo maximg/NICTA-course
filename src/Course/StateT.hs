@@ -98,7 +98,8 @@ instance Monad f => Monad (StateT s f) where
   (=<<) g x =
     StateT { runStateT = (\s -> 
       let x' = runStateT x s
-      in runStateT =<< (g =<< (fst <$> x')) =<< (snd <$> x') 
+          gx = (g . fst) <$> x'
+      in join $ runStateT <$> gx <*> (snd <$> x')
     ) }
 
 -- | A `State'` is `StateT` specialised to the `Id` functor.
