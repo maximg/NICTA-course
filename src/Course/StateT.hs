@@ -77,9 +77,8 @@ instance Monad f => Applicative (StateT s f) where
       let
         g' = runStateT g s
         x' = runStateT x =<< (snd <$> g')
-        g'' = fst <$> g'
         applyFst f' (y,z) = (f' y, z)
-      in applyFst <$> g'' <*> x'
+      in applyFst <$> (fst <$> g') <*> x'
      ) }
 
 -- | Implement the `Monad` instance for @StateT s f@ given a @Monad f@.
@@ -182,8 +181,8 @@ putT ::
   Monad f =>
   s
   -> StateT s f ()
-putT x =
-  StateT { runStateT = (\_ -> pure ((), x) )}
+putT s =
+  StateT { runStateT = (\_ -> pure ((), s) )}
 
 -- | Remove all duplicate elements in a `List`.
 --
@@ -195,7 +194,7 @@ distinct' ::
   List a
   -> List a
 distinct' xs =
-  let p x = state' (\s -> (not $ x `S.member` s, S.insert x s))
+  let p x = (\s -> (const $ pure (not $ S.member x s)) =<< putT (S.insert x s)) =<< getT
   in eval' (filtering p xs) S.empty
 
 -- | Remove all duplicate elements in a `List`.
@@ -213,8 +212,14 @@ distinctF ::
   (Ord a, Num a) =>
   List a
   -> Optional (List a)
-distinctF =
-  error "todo: Course.StateT#distinctF"
+distinctF xs =
+  let
+    constT x = StateT { runStateT = const x }
+    -- checkX :: (Ord a, Num a) => a -> (S.Set a) -> (StateT (S.Set a) Optional Bool)
+    check x s = if x > 100 then constT Empty
+                            else pure (not $ S.member x s)
+    p x = (\s -> (\_ -> check x s) =<< putT (S.insert x s)) =<< getT
+  in evalT (filtering p xs) S.empty
 
 -- | An `OptionalT` is a functor of an `Optional` value.
 data OptionalT f a =
