@@ -152,7 +152,9 @@ join =
   f a
   -> (a -> f b)
   -> f b
-(>>=) x g = join (g <$> x)
+(>>=) = 
+  flip (=<<)
+
 
 infixl 1 >>=
 
@@ -168,7 +170,7 @@ infixl 1 >>=
   -> a
   -> f c
 (<=<) g h x =
-  (h x) >>= g
+  g =<< h x
 
 infixr 1 <=<
 
